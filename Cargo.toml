@@ -6,7 +6,6 @@ description = "Lightweight async Telegram bot notificator for any tokio-compatib
 license = "MIT"
 repository = "https://github.com/ModemNakata/tg-notify-rs"
 keywords = ["telegram", "notification", "bot", "async"]
-categories = ["network", "api-bindings"]
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
