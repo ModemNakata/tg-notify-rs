@@ -1,4 +1,3 @@
-use reqwest::Client;
 use serde::Deserialize;
 use std::sync::OnceLock;
 use tracing::{error, info};
@@ -8,7 +7,6 @@ static CONFIG: OnceLock<Config> = OnceLock::new();
 struct Config {
     token: String,
     chat_id: String,
-    client: Client,
 }
 
 #[derive(Deserialize, Debug)]
@@ -25,13 +23,7 @@ pub fn init(token: impl Into<String>, chat_id: impl Into<String>) {
     let token = token.into();
     let chat_id = chat_id.into();
 
-    let client = Client::new();
-
-    let _ = CONFIG.set(Config {
-        token,
-        chat_id,
-        client,
-    });
+    let _ = CONFIG.set(Config { token, chat_id });
 
     info!("tg_notify initialized");
 }
@@ -47,11 +39,10 @@ pub fn notify(message: &str) {
 
     let token = config.token.clone();
     let chat_id = config.chat_id.clone();
-    let client = config.client.clone();
     let message = message.to_string();
 
-    tokio::spawn(async move {
-        if let Err(e) = send_message(&client, &token, &chat_id, &message).await {
+    std::thread::spawn(move || {
+        if let Err(e) = send_message(&token, &chat_id, &message) {
             error!("Failed to send telegram notification: {}", e);
         } else {
             info!("Telegram notification sent");
@@ -59,29 +50,22 @@ pub fn notify(message: &str) {
     });
 }
 
-async fn send_message(
-    client: &Client,
-    token: &str,
-    chat_id: &str,
-    message: &str,
-) -> Result<(), reqwest::Error> {
-    let url = format!(
-        "https://api.telegram.org/bot{}/sendMessage",
-        token
-    );
+fn send_message(token: &str, chat_id: &str, message: &str) -> Result<(), String> {
+    let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
 
     let payload = serde_json::json!({
         "chat_id": chat_id,
         "text": message,
     });
 
-    let response = client
-        .post(&url)
-        .json(&payload)
-        .send()
-        .await?;
+    let response = ureq::post(&url)
+        .set("Content-Type", "application/json")
+        .send_string(&payload.to_string())
+        .map_err(|e| e.to_string())?;
 
-    let telegram_response: TelegramResponse = response.json().await?;
+    let body = response.into_string().map_err(|e| e.to_string())?;
+    let telegram_response: TelegramResponse =
+        serde_json::from_str(&body).map_err(|e| e.to_string())?;
 
     if !telegram_response.ok {
         let error_msg = telegram_response

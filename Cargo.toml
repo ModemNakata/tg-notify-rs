@@ -1,21 +1,20 @@
 [package]
 name = "tg_notify"
-version = "0.1.0"
+version = "1.1.0"
 edition = "2024"
-description = "Lightweight async Telegram bot notificator for any tokio-compatible Rust codebase."
+description = "Lightweight fire-and-forget Telegram bot notifications for any Rust codebase."
 license = "MIT"
 repository = "https://github.com/ModemNakata/tg-notify-rs"
-keywords = ["telegram", "notification", "bot", "async"]
+keywords = ["telegram", "notification", "bot"]
+categories = ["network", "api-bindings"]
 
 [dependencies]
-tokio = { version = "1", features = ["rt", "macros"] }
-reqwest = { version = "0.12", features = ["json"] }
+ureq = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [lib]
