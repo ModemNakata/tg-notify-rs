@@ -18,16 +18,22 @@ tg_notify = "1.1.2"
 ## Usage
 
 ### Option 1: Global init (simple)
-
 ```rust
-fn main() {
-    tg_notify::init("BOT_TOKEN", "CHAT_ID");
+use tg_notify::Notifier;
 
-    notify("Server started!");
+fn main() {
+    let notifier = Notifier::new("BOT_TOKEN", "CHAT_ID");
+
+    notifier.notiy("Hello from main!");
+
+    // you may want to add sleep for short-lived programs, because notifier-thread is not awaited and will be terminated after program' end, so notification may not go through.
+    // Basically this crate is designed to be used in `continuous` execution/programs.
+    //
+    // also, you can add tracing_subscriber for debug purposes. (see examples/basic.rs)
 }
 ```
 
-### Option 2: With App State (recommended for Axum/Actix)
+### Option 2: Example with App State (Axum/Actix style)
 
 ```rust
 use tg_notify::Notifier;
