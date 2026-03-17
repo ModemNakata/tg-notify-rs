@@ -6,7 +6,6 @@ description = "Lightweight fire-and-forget Telegram bot notifications for any Ru
 license = "MIT"
 repository = "https://github.com/ModemNakata/tg-notify-rs"
 keywords = ["telegram", "notification", "bot"]
-categories = ["network", "api-bindings"]
 
 [dependencies]
 ureq = "2"
