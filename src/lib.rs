@@ -1,8 +1,36 @@
 use serde::Deserialize;
 use std::sync::OnceLock;
-use tracing::{error, info};
+use tracing::{debug, error, info};
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
+
+pub struct Notifier {
+    token: String,
+    chat_id: String,
+}
+
+impl Notifier {
+    pub fn new(token: impl Into<String>, chat_id: impl Into<String>) -> Self {
+        Self {
+            token: token.into(),
+            chat_id: chat_id.into(),
+        }
+    }
+
+    pub fn notify(&self, message: &str) {
+        let token = self.token.clone();
+        let chat_id = self.chat_id.clone();
+        let message = message.to_string();
+
+        std::thread::spawn(move || {
+            debug!("Spawning thread to send notification: {}", message);
+            match send_message(&token, &chat_id, &message) {
+                Ok(_) => info!("Notification sent: {}", message),
+                Err(e) => error!("Failed to send notification: {}", e),
+            }
+        });
+    }
+}
 
 struct Config {
     token: String,
@@ -37,21 +65,17 @@ pub fn notify(message: &str) {
         }
     };
 
-    let token = config.token.clone();
-    let chat_id = config.chat_id.clone();
-    let message = message.to_string();
-
-    std::thread::spawn(move || {
-        if let Err(e) = send_message(&token, &chat_id, &message) {
-            error!("Failed to send telegram notification: {}", e);
-        } else {
-            info!("Telegram notification sent");
-        }
-    });
+    let notifier = Notifier::new(&config.token, &config.chat_id);
+    notifier.notify(message);
 }
 
 fn send_message(token: &str, chat_id: &str, message: &str) -> Result<(), String> {
     let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
+
+    debug!(
+        "Sending to Telegram: chat_id={}, message={}",
+        chat_id, message
+    );
 
     let payload = serde_json::json!({
         "chat_id": chat_id,
@@ -63,7 +87,12 @@ fn send_message(token: &str, chat_id: &str, message: &str) -> Result<(), String>
         .send_string(&payload.to_string())
         .map_err(|e| e.to_string())?;
 
+    let status = response.status();
+    debug!("Telegram response status: {}", status);
+
     let body = response.into_string().map_err(|e| e.to_string())?;
+    debug!("Telegram response body: {}", body);
+
     let telegram_response: TelegramResponse =
         serde_json::from_str(&body).map_err(|e| e.to_string())?;
 
@@ -72,6 +101,8 @@ fn send_message(token: &str, chat_id: &str, message: &str) -> Result<(), String>
             .description
             .unwrap_or_else(|| "Unknown error".to_string());
         error!("Telegram API error: {}", error_msg);
+    } else {
+        info!("Telegram notification sent successfully");
     }
 
     Ok(())
@@ -85,5 +116,12 @@ mod tests {
     fn test_init() {
         init("test_token", "test_chat_id");
         assert!(CONFIG.get().is_some());
+    }
+
+    #[test]
+    fn test_notifier_new() {
+        // TODO
+        let notifier = Notifier::new("token", "chat_id");
+        notifier.notify("test message");
     }
 }
