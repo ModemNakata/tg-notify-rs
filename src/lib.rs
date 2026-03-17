@@ -4,6 +4,7 @@ use tracing::{debug, error, info};
 
 static CONFIG: OnceLock<Config> = OnceLock::new();
 
+#[derive(Clone)]
 pub struct Notifier {
     token: String,
     chat_id: String,
