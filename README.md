@@ -12,7 +12,7 @@ Based on ureq v2.
 ```toml
 # Cargo.toml
 [dependencies]
-tg_notify = "1.1.2"
+tg_notify = "1.1.3"
 ```
 
 ## Usage
