@@ -33,8 +33,7 @@ That's it. Works with any tokio-based runtime.
 
 ## Requirements
 
-- Rust 1.70+
-- tokio runtime
+- Rust with tokio runtime
 
 ## License
 
