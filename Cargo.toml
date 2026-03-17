@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Lightweight async Telegram bot notificator for any tokio-compatible Rust codebase."
 license = "MIT"
-repository = ""
+repository = "https://github.com/ModemNakata/tg-notify-rs"
 keywords = ["telegram", "notification", "bot", "async"]
 categories = ["network", "api-bindings"]
 
